@@ -1,0 +1,166 @@
+﻿
+
+===============================================================================
+buffer_write.js
+==================
+buf256 = new Buffer(256);
+buf256.fill(0);
+buf256.write("add some text");
+console.log(buf256.toString());
+buf256.write("more text", 9, 9);
+console.log(buf256.toString());
+buf256[18] = 43;
+console.log(buf256.toString());
+
+output:
+C:\books\node\ch05>node buffer_write.js
+add some text
+add some more text
+add some more text+
+
+===============================================================================
+buffer_read.js
+================
+bufUTF8 = new Buffer("Some UTF8 Text \u00b6 \u30c6 \u20ac", 'utf8');
+console.log(bufUTF8.toString());
+console.log(bufUTF8.toString('utf8', 5, 9));
+var StringDecoder = require('string_decoder').StringDecoder;
+var decoder = new StringDecoder('utf8');
+console.log(decoder.write(bufUTF8));
+
+output:
+C:\books\node\ch05>node buffer_read.js
+Some UTF8 Text ¶ テ €
+UTF8
+Some UTF8 Text ¶ テ €
+e3
+e3838620
+
+===============================================================================
+
+
+
+=================================================================================================
+ stream_read.js
+=================
+var stream = require('stream');
+var util = require('util');
+util.inherits(Answers, stream.Readable);
+function Answers(opt) {
+    stream.Readable.call(this, opt);
+    this.quotes = ["yes", "no", "maybe"];
+    this._index = 0;
+ }
+ Answers.prototype._read = function() {
+    if (this._index > this.quotes.length){
+    this.push(null);
+ } else {
+    this.push(this.quotes[this._index]);
+    this._index += 1;
+ }
+ };
+ var r = new Answers();
+ console.log("Direct read: " + r.read().toString());
+ r.on('data', function(data){
+ console.log("Callback read: " + data.toString());
+ });
+ r.on('end', function(data){
+  console.log("No more answers.");
+ });
+
+
+output:
+C:\books\node\ch05>node stream_read.js
+Direct read: yes
+Callback read: no
+Callback read: maybe
+No more answers.
+
+
+===============================================================================
+stream_write.js:
+=================
+var stream = require('stream');
+var util = require('util');
+util.inherits(Writer, stream.Writable);
+function Writer(opt) {
+stream.Writable.call(this, opt);
+this.data = new Array();
+ }
+Writer.prototype._write = function(data, encoding, callback) {
+this.data.push(data.toString('utf8'));
+console.log("Adding: " + data);
+callback();
+ };
+var w = new Writer();
+ for (var i=1; i<=5; i++){
+w.write("Item" + i, 'utf8');
+}
+w.end("ItemLast");
+ console.log(w.data);
+
+output:
+C:\books\node\ch05>node stream_write.js
+Adding: Item1
+Adding: Item2
+Adding: Item3
+Adding: Item4
+Adding: Item5
+Adding: ItemLast
+[ 'Item1', 'Item2', 'Item3', 'Item4', 'Item5', 'ItemLast' ]
+
+=============================================================================================
+=============================================================================================
+
+ zlib_buffers.js  [Compressing/decompressing buffers using the Zlib module]
+=================
+var zlib = require("zlib");
+var input = '...............text...............';
+zlib.deflate(input, function(err, buffer) {
+   if (!err) {
+      console.log("deflate (%s): ", buffer.length, buffer.toString('base64'));
+      zlib.inflate(buffer, function(err, buffer) {
+         if (!err) {
+            console.log("inflate (%s): ", buffer.length, buffer.toString());
+         }
+      });
+      zlib.unzip(buffer, function(err, buffer) {
+         if (!err) {
+            console.log("unzip deflate (%s): ", buffer.length, buffer.toString());
+         }
+      });
+   }
+});
+
+ 
+zlib.gzip(input, function(err, buffer) {
+if (!err) {
+ console.log("gzip (%s): ", buffer.length, buffer.toString('base64'));
+zlib.gunzip(buffer, function(err, buffer) {
+ if (!err) {
+ console.log("gunzip (%s): ", buffer.length, buffer.toString());
+ }
+ });
+ zlib.unzip(buffer, function(err, buffer) {
+if (!err) {
+console.log("unzip gzip (%s): ", buffer.length, buffer.toString());
+}
+ });
+}
+});
+
+output:
+C:\books\node\ch05>node zlib_buffers.js
+deflate (18): eJzT00MBJakVJagiegB9Zgcq
+deflateRaw (12): 09NDASWpFSWoInoA
+gzip (30): H4sIAAAAAAAAC9PTQwElqRUlqCJ6AIq+x+AiAAAA
+inflate (34): ...............text...............
+unzip deflate (34): ...............text...............
+inflateRaw (34): ...............text...............
+gunzip (34): ...............text...............
+unzip gzip (34): ...............text...............
+
+
+
+===============================================================================
+

@@ -1,0 +1,229 @@
+file_write.js: Writing a JSON string to a file
+==================
+var fs = require('fs');
+var config = {
+maxFiles: 20,
+maxConnections: 15,
+rootPath: "/webroot"
+};
+var configTxt = JSON.stringify(config);
+var options = {encoding:'utf8', flag:'w'};
+fs.writeFile('config.txt', configTxt, options, function(err){
+ if (err){
+ console.log("Config Write Failed.");
+ } else {
+ console.log("Config Saved.");
+ }
+ });
+
+output:
+C:\books\node\ch06\writing>node file_write.js
+Config Saved.
+
+=====================================================================================
+
+
+
+
+=========================================================================================================
+
+file_write_stream.js: [Implementing a Writable stream to allow streaming writes to a file]
+======================
+
+var fs = require('fs');
+ var grains = ['wheat', 'rice', 'oats'];
+var options = { encoding: 'utf8', flag: 'w' };
+ var fileWriteStream = fs.createWriteStream("grains.txt", options);
+ fileWriteStream.on("close", function(){
+console.log("File Closed.");
+});
+while (grains.length){
+var data = grains.pop() + " ";
+fileWriteStream.write(data);
+console.log("Wrote: %s", data);
+ }
+ fileWriteStream.end();
+
+output:
+C:\books\node\ch06\writing>node file_write_stream.js
+Wrote: oats
+Wrote: rice
+Wrote: wheat
+File Closed.
+
+
+=====================================================================================
+=====================================================================================
+file_read.js:
+===============
+ var fs = require('fs');
+ var options = {encoding:'utf8', flag:'r'};
+ fs.readFile('config.txt', options, function(err, data){
+ if (err){
+ console.log("Failed to open Config File.");
+ } else {
+ console.log("Config Loaded.");
+ var config = JSON.parse(data);
+ console.log("Max Files: " + config.maxFiles);
+console.log("Max Connections: " + config.maxConnections);
+ console.log("Root Path: " + config.rootPath);
+ }
+ });
+
+output:
+C:\books\node\ch06\reading>node file_read.js
+Config Loaded.
+Max Files: 20
+Max Connections: 15
+Root Path: /webroot
+
+
+=====================================================================================
+
+=====================================================================================
+
+
+
+=====================================================================================================
+
+file_read_stream.js: [Implementing a Readable stream to allow streaming reads from a file]
+===================
+ var fs = require('fs');
+ var options = { encoding: 'utf8', flag: 'r' };
+ var fileReadStream = fs.createReadStream("grains.txt", options);
+ fileReadStream.on('data', function(chunk) {
+ console.log('Grains: %s', chunk);
+ console.log('Read %d bytes of data.', chunk.length);
+ });
+ fileReadStream.on("close", function(){
+ console.log("File Closed.");
+ });
+
+output:
+C:\books\node\ch06\reading>node file_read_stream.js
+Grains: oats rice wheat
+Read 16 bytes of data.
+File Closed.
+
+=====================================================================================
+ file_stats.js: [Implementing an fs.stats() call to retrieve information about a file]
+==================
+var fs = require('fs');
+fs.stat('file_stats.js', function (err, stats) {
+if (!err){
+console.log('stats: ' + JSON.stringify(stats, null, ' '));
+console.log(stats.isFile() ? "Is a File" : "Is not a File");
+console.log(stats.isDirectory() ? "Is a Folder" : "Is not a Folder");
+console.log(stats.isSocket() ? "Is a Socket" : "Is not a Socket");
+stats.isDirectory();
+stats.isBlockDevice();
+ stats.isCharacterDevice();
+ //stats.isSymbolicLink(); //only lstat
+ stats.isFIFO();
+ stats.isSocket();
+ }
+ });
+
+output:
+C:\books\node\ch06>node file_stats.js
+stats: {
+"dev": 818973644,
+"mode": 33206,
+"nlink": 1,
+"uid": 0,
+"gid": 0,
+"rdev": 0,
+"ino": 1970324837052284,
+"size": 535,
+"atime": "2016-09-14T18:03:26.572Z",
+"mtime": "2013-11-26T21:51:51.148Z",
+"ctime": "2014-12-18T17:30:43.340Z",
+"birthtime": "2016-09-14T18:03:26.572Z"
+}
+Is a File
+Is not a Folder
+Is not a Socket
+
+
+
+=====================================================================================
+Deleting Files
+===============
+
+
+fs.unlink("new.txt", function(err){
+console.log(err ? "File Delete Failed" : "File Deleted");
+});
+
+=========================================================================================
+Truncating Files
+====================
+
+
+fs.truncate("new.txt", function(err){
+console.log(err ? "File Truncate Failed" : "File Truncated");
+});
+
+
+=========================================================================================
+Making  Directories
+=================================
+
+fs.mkdir("./data/folderA", function(err){
+    console.log(err ? "Directory ceration Failed" : "Directory creation");
+});
+
+
+=========================================================================================
+Removing Directories
+======================
+
+fs.rmdir("./data/folderA/folderB/folderC", function(err){
+    console.log(err ? "Directory deletion Failed" : "Directory deletion");
+});
+
+=========================================================================================
+Renaming Files and Directories
+================================
+
+
+
+fs.rename("old.txt", "new.txt", function(err){
+console.log(err ? "Rename Failed" : "File Renamed");
+});
+
+
+
+
+=========================================================================================
+File watch.js
+=============
+const fs = require('fs');
+  
+fs.watch("ex_dir", (eventType, filename) => {
+  console.log("\nThe file", filename, "was modified!");
+  console.log("The type of change was:", eventType);
+});
+  
+// Changing the contents of a file 
+setTimeout(
+  () => fs.writeFileSync("ex_dir/ex1.txt", 
+  "The file is modified"), 1000
+);
+  
+// Renaming a file to a new name
+setTimeout(
+  () => fs.renameSync("ex_dir/ex2.txt", 
+  "ex_dir/new_ex2.txt"), 2000
+);
+
+===========
+output:
+The file ex1.txt was modified!
+The type of change was: change
+
+The file ex2.txt was modified!
+The type of change was: rename
+
+The file new_ex2.txt was modified!
+The type of change was: rename
