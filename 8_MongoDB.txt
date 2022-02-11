@@ -1,0 +1,36 @@
+var MongoClient = require('mongodb').MongoClient;
+var url = "mongodb://localhost:27017/";
+
+MongoClient.connect(url, function(err, db) {
+  if (err) throw err;
+console.log("connected to db:mydb");
+  var dbo = db.db("mydb");
+  dbo.createCollection("studentdetails", function(err, res) {
+    if (err) throw err;
+    console.log("Collection created!Student Details");
+   });
+  var myobj = { name: "DEF", address: "Highway 39" };
+  dbo.collection("studentdetails").insertOne(myobj, function(err, res) {
+    if (err) throw err;
+    console.log("1 document inserted");
+  });
+ var myobj2 = { name: "ABC", address: "Highway 38" };
+  dbo.collection("studentdetails").insertOne(myobj2, function(err, res) {
+    if (err) throw err;
+    console.log("document 2 inserted");
+  });
+  var myquery = { address: "Highway 39" };
+  var newvalues = { $set: {name: "ABC", address: "Canyon 123" } };
+  dbo.collection("studentdetails").updateOne(myquery, newvalues, function(err, res) {
+    if (err) throw err;
+    console.log("1 document updated");
+   });
+    dbo.collection("studentdetails").find({}).toArray(function(err, result) {
+    if (err) throw err;
+    console.log(result);
+    db.close();
+  });
+});
+
+
+
