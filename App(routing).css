@@ -1,0 +1,12 @@
+ul li {
+  list-style: none;
+  padding: 10px;
+  margin-left: 20px;
+  background-color: rgb(212, 209, 209);
+  display: block;
+  float: left;
+  border-radius: 5px;
+}
+div {
+  clear: left;
+}
